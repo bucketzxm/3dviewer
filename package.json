@@ -1,0 +1,24 @@
+{
+  "name": "viewer3d",
+  "version": "1.0.0",
+  "description": "a 3d object viewer",
+  "main": "main.js",
+  "scripts": {
+    "dev": "WEBPACK_ENV=dev ./node_modules/.bin/webpack --watch --inline",
+    "build": "WEBPACK_ENV=build ./node_modules/.bin/webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.com:bucketzxm/viewer3d.git"
+  },
+  "author": "bucketzxm",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "image-webpack-loader": "^3.2.0",
+    "three": "^0.84.0",
+    "webpack": "^2.2.1"
+  }
+}

@@ -1,0 +1,36 @@
+.Column {
+    max-width: 48em;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left:10px;
+    padding-right: 10px;
+}
+
+.FlexEmbed {
+    display: block;
+    overflow: hidden;
+
+    position: relative;
+}
+
+.FlexEmbed-ratio {
+    display: block;
+    padding-bottom: 100%;
+    width: 100%;
+}
+
+.FlexEmbed-ratio--16by9{
+    padding-bottom: 56.25%;
+}
+
+.FlexEmbed-content {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+}
+
+iframe {
+    border: 0;
+}
