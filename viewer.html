@@ -3,10 +3,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>3d Viewer iframe</title>
-
+    <link rel="stylesheet" href="./viewer.css">
   </head>
   <body>
+
+    <div id="container">
+      <canvas id="viewport">
+      </canvas>
+      <div class="controls">
+        <input id="move" type="image" src="./public/images/move_u316.png" alt="submit">
+        <input id="recover" onclick="recoverButtonOn()" type="image" src="./public/images/recover_318.png" alt="submit">
+        <input id="rotate" type="image" src="./public/images/rotate_u326.png" alt="submit">
+        <input id="zoomout" type="image" src="./public/images/zoomout_u322.png" alt="submit">
+        <input id="zoomin" type="image" src="./public/images/zoomin_u324.png" alt="submit" >
+        <input id="vrmode" type="image" src="./public/images/vr_u320.png" alt="submit">
+
+      </div>
+    </div>
+
+    <!-- use script to call viewer, pass in the filename -->
     <script src="./public/main.bundle.js"></script>
+
   </body>
 
 </html>

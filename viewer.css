@@ -1,0 +1,58 @@
+#container
+{
+    height: 100%;
+    position:relative;
+    width:100%;
+}
+#viewport
+{
+    height: 100%;
+    width: 100%;
+}
+
+.controls
+{
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    height: auto;
+
+    /* use image */
+    border: none;
+    background: transparent;
+    margin-bottom: 10px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+
+#move
+{
+    margin-left: 20%;
+}
+
+#recover
+{
+    margin-left: 5%;
+}
+
+#rotate
+{
+    margin-left: 5%;
+}
+
+#zoomout
+{
+    margin-left: 5%;
+}
+
+#zoomin
+{
+    margin-left: 5%;
+}
+
+#vrmode
+{
+    margin-left: 5%;
+}

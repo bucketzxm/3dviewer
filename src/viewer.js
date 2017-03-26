@@ -3,203 +3,248 @@ Detector = require('./Detector.js');
 MTLLoader = require('./MTLLoader.js');
 OBJLoader = require('./OBJLoader.js');
 OrbitControls = require('./OrbitControls.js');
+helper = require('./helper.js');
 
 detectWebGL();
 
 var container;
 var camera, controls, scene, renderer;
-
 var lighting, ambient, keyLight, fillLight, backLight;
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight /2;
-
+var modelObject = null;
 
 function detectWebGL(){
-  if (!Detector.webgl){
-    Detector.addGetWebGLMessage();
-  }
+    if (!Detector.webgl){
+        Detector.addGetWebGLMessage();
+    }
 }
 
 function initSceneLights(){
-  ambient = new THREE.AmbientLight(0xffffff ,1.0);
+    ambient = new THREE.AmbientLight(0xffffff ,1.0);
 
-  keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
-  keyLight.position.set(-100, 0, 100);
+    keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
+    keyLight.position.set(-100, 0, 100);
 
-  fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
-  fillLight.position.set(100, 0, -100).normalize();
+    fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
+    fillLight.position.set(100, 0, -100).normalize();
 
-  backLight = new THREE.DirectionalLight(0xffffff, 1.0);
-  backLight.position.set(100, 0, -100).normalize();
+    backLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    backLight.position.set(100, 0, -100).normalize();
 
-  scene.add(ambient);
-  scene.add(keyLight);
-  scene.add(fillLight);
-  scene.add(backLight);
+    scene.add(ambient);
+    scene.add(keyLight);
+    scene.add(fillLight);
+    scene.add(backLight);
 
 }
 
-
+// load shader example
 function loadShader(vsPath, fgPath, vertexShader, fragmentShader){
-  $.get(vsPath, function(vShader){
-    $.get(fgPath, function(fShader){
-      vertexShader = vShader;
-      fragmentShader = fShader;
+    $.get(vsPath, function(vShader){
+        $.get(fgPath, function(fShader){
+            vertexShader = vShader;
+            fragmentShader = fShader;
+        });
     });
-  });
 
-  // example:
-  // when define material
-  // material = new THREE.ShaderMaterial({
-  //   vertexShader: vertexShader,
-  //   fragmentShader: fragmentShader
-  // });
+    // example:
+    // when define material
+    // material = new THREE.ShaderMaterial({
+    //   vertexShader: vertexShader,
+    //   fragmentShader: fragmentShader
+    // });
 }
 
 function init() {
-  container = document.createElement('div');
-  document.body.appendChild(container);
+    // container = document.createElement('div');
+    // document.body.appendChild(container);
+    container = document.getElementById("container");
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
+    camera.position.z = 3;
+    scene = new THREE.Scene();
 
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 3;
-
-  scene = new THREE.Scene();
-
-  initSceneLights();
-
-  var mtlLoader = new THREE.MTLLoader();
-  mtlLoader.setPath('http://localhost:8000/assets/');
-  // mtlLoader.crossOrigin = '';
-
-  mtlLoader.load('deer-obj.mtl', function(materials){
-    materials.preload();
-    // console.log(materials.materials.default.map);
-    // materials.materials.default.map.magFilter = THREE.NearestFilter;
-    // materials.materials.default.map.minFilter = THREE.LinearFilter;
-    var objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.setPath("http://localhost:8000/assets/");
-    objLoader.load('deer-obj.obj', function(object){
-      // set all children to doubleside
-
-      object.traverse(function(child){
-        if( child instanceof THREE.Mesh){
-          child.material.side = THREE.DoubleSide;
-        }
-      });
+    initSceneLights();
 
 
-      scene.add(object);
+    var manager = new THREE.LoadingManager();
+    manager.onStart = function(url, itemsLoaded, itemsTotal){
+        console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    }
+    manager.onLoad = function ( ) {
+	console.log( 'Loading complete!');
+        console.log("Model loaded " + modelObject);
+        camera.lookAt(modelObject.position);
+    };
+    manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    };
+    manager.onError = function ( url ) {
+	console.log( 'There was an error loading ' + url );
+    };
+
+    var mtlLoader = new THREE.MTLLoader(manager);
+    mtlLoader.setPath('http://localhost:8000/assets/');
+    mtlLoader.crossOrigin = '';
+
+    mtlFilePath = helper.getQueryStr("mtlFilePath");
+    objFilePath = helper.getQueryStr("objFilePath");
+
+    console.log("mtlFilePath=" + mtlFilePath + " objFilePath="+ objFilePath);
+
+    mtlLoader.load(mtlFilePath, function(materials){
+        materials.preload();
+        // console.log(materials.materials.default.map);
+        // materials.materials.default.map.magFilter = THREE.NearestFilter;
+        // materials.materials.default.map.minFilter = THREE.LinearFilter;
+        var objLoader = new THREE.OBJLoader(manager);
+        objLoader.setMaterials(materials);
+        objLoader.setPath("http://localhost:8000/assets/");
+        objLoader.load(objFilePath, function(object){
+            // set all children to doubleside
+
+            object.traverse(function(child){
+                if( child instanceof THREE.Mesh){
+                    child.material.side = THREE.DoubleSide;
+                }
+            });
+            scene.add(object);
+            modelObject = object;
+        });
     });
-  });
+    renderer = new THREE.WebGLRenderer({canvas: viewport});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
 
-  renderer = new THREE.WebGLRenderer();
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
-
-  container.appendChild(renderer.domElement);
-
-  loadFunctionKeys(scene);
+    container.appendChild(renderer.domElement);
 }
-
-function loadFunctionKeys(){
-  var textureLoader = new THREE.TextureLoader();
-  textureLoader.crossOrigin = "";
-  textureLoader.setPath("http://localhost:8000/public/images/");
-  var zoomOutTexture = new THREE.Texture();
-
-  zoomOutTexture = textureLoader.load(
-    "zoomout_u322.png"
-  );
-  // zoomOutTexture.image = image;
-
-  // zoom out
-  var zoomOutGeometry = new THREE.Geometry();
-  zoomOutGeometry.vertices.push(
-    new THREE.Vector3(0.0, 0.0, 0.0),
-    new THREE.Vector3(1.0, 0.0, 0.0),
-    new THREE.Vector3(1.0, 1.0, 0.0),
-    new THREE.Vector3(0.0, 1.0, 0.0)
-  );
-
-  zoomOutGeometry.faces.push(new THREE.Face3(0, 1, 3));
-  zoomOutGeometry.faces.push(new THREE.Face3(1, 2, 3));
-
-
-
-
-
-  zoomOutGeometry.faceVertexUvs[0] = [];
-
-  var icon = [
-    new THREE.Vector2(0, 0),
-    new THREE.Vector2(1, 0),
-    new THREE.Vector2(1, 1),
-    new THREE.Vector2(0, 1)
-  ];
-  zoomOutGeometry.faceVertexUvs[0][0] = [
-    icon[0],
-    icon[1],
-    icon[3]
-  ];
-  zoomOutGeometry.faceVertexUvs[0][1] = [
-    icon[1],
-    icon[2],
-    icon[3]
-  ];
-
-  zoomOutGeometry.computeFaceNormals();
-  // zoomOutGeometry.computeCentroids();
-  zoomOutGeometry.computeVertexNormals();
-
-  var zoomOutMaterial = new THREE.MeshBasicMaterial(
-    {
-      color: 0xffffff,
-      opacity: 0.0,
-      map: zoomOutTexture
-    });
-
-  // set material show double side
-  zoomOutMaterial.side = THREE.DoubleSide;
-  var zoomOutMesh = new THREE.Mesh(zoomOutGeometry, zoomOutMaterial);
-  //TODO keep position fixed related to camera position.
-  zoomOutMesh.position.set(1.5, 0.0, 0.0);
-  zoomOutMesh.transparent = true;
-
-  scene.add(zoomOutMesh);
-  // zoom out end
-  // zoom in
-  var zoomInGeometry = new THREE.Geometry();
-  zoomInGeometry.vertices.push(
-    new THREE.Vector3(-1.0, 1.0, 0.0),
-    new THREE.Vector3(1.0, 1.0, 0.0),
-    new THREE.Vector3(1.0, -1.0, 0.0),
-    new THREE.Vector3(-1.0, -1.0, 0.0)
-  );
-  // zoom in end
-}
-
 
 function animate(){
-  setTimeout(function() {
-    requestAnimationFrame(animate);
-  }, 1000/30);
-  render();
+    setTimeout(function() {
+        requestAnimationFrame(animate);
+    }, 1000/300);
+    render();
 }
 
 function render(){
-  requestAnimationFrame(render);
-  controls.update();
-  renderer.render(scene, camera);
+    requestAnimationFrame(render);
+    controls.update();
+    renderer.render(scene, camera);
 }
 
+function addOnClickEvents(){
+    var recoverButton = document.getElementById("recover");
+    recover.onclick = function(){
+        console.log("recovery button is clicked");
+        console.log("Set Camera lookAt " + modelObject.position.x + modelObject.position.y + modelObject.position.z);
+        camera.lookAt(modelObject.position);
+    }
 
-init();
+    var moveButton = document.getElementById("move");
 
-controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.25;
-controls.enableZoom = true;
+    moveButton.onclick = function(){
+        console.log("move button is clicked");
+    }
+    var rotateButton = document.getElementById("rotate");
 
-animate();
+    moveButton.onclick = function(){
+        console.log("move button is clicked");
+
+        var zoomOutButton = document.getElementById("zoomout");
+        moveButton.onclick = function(){
+            console.log("move button is clicked");
+
+            var zoominButton = document.getElementById("zoomin");
+            moveButton.onclick = function(){
+                console.log("move button is clicked");
+
+                var vrmode = document.getElementById("vrmode");
+                moveButton.onclick = function(){
+                    console.log("move button is clicked");
+
+                }
+
+                addOnClickEvents();
+                init();
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.25;
+                controls.enableZoom = true;
+
+                animate();
+
+                function loadFunctionKeys(){
+                    var textureLoader = new THREE.TextureLoader();
+                    textureLoader.crossOrigin = "";
+                    textureLoader.setPath("http://localhost:8000/public/images/");
+                    var zoomOutTexture = new THREE.Texture();
+                    var zoomInTexture = new THREE.Texture();
+
+                    zoomOutTexture = textureLoader.load(
+                        "zoomout_u322.png"
+                    );
+
+                    // zoomOutTexture.image = image;
+
+                    // zoom out
+                    var zoomOutGeometry = new THREE.Geometry();
+                    zoomOutGeometry.vertices.push(
+                        new THREE.Vector3(0.0, 0.0, 0.0),
+                        new THREE.Vector3(1.0, 0.0, 0.0),
+                        new THREE.Vector3(1.0, 1.0, 0.0),
+                        new THREE.Vector3(0.0, 1.0, 0.0)
+                    );
+
+                    zoomOutGeometry.faces.push(new THREE.Face3(0, 1, 3));
+                    zoomOutGeometry.faces.push(new THREE.Face3(1, 2, 3));
+
+                    zoomOutGeometry.faceVertexUvs[0] = [];
+
+                    var icon = [
+                        new THREE.Vector2(0, 0),
+                        new THREE.Vector2(1, 0),
+                        new THREE.Vector2(1, 1),
+                        new THREE.Vector2(0, 1)
+                    ];
+                    zoomOutGeometry.faceVertexUvs[0][0] = [
+                        icon[0],
+                        icon[1],
+                        icon[3]
+                    ];
+                    zoomOutGeometry.faceVertexUvs[0][1] = [
+                        icon[1],
+                        icon[2],
+                        icon[3]
+                    ];
+
+                    zoomOutGeometry.computeFaceNormals();
+                    // zoomOutGeometry.computeCentroids();
+                    zoomOutGeometry.computeVertexNormals();
+
+                    var zoomOutMaterial = new THREE.MeshBasicMaterial(
+                        {
+                            color: 0xffffff,
+                            opacity: 0.0,
+                            map: zoomOutTexture
+                        });
+
+                    // set material show double side
+                    zoomOutMaterial.side = THREE.DoubleSide;
+                    var zoomOutMesh = new THREE.Mesh(zoomOutGeometry, zoomOutMaterial);
+                    //TODO keep position fixed related to camera position.
+                    zoomOutMesh.position.set(1.5, 0.0, 0.0);
+                    zoomOutMesh.transparent = true;
+
+                    scene.add(zoomOutMesh);
+                    // zoom out end
+                    // zoom in
+                    var zoomInGeometry = new THREE.Geometry();
+                    zoomInGeometry.vertices.push(
+                        new THREE.Vector3(-1.0, 1.0, 0.0),
+                        new THREE.Vector3(1.0, 1.0, 0.0),
+                        new THREE.Vector3(1.0, -1.0, 0.0),
+                        new THREE.Vector3(-1.0, -1.0, 0.0)
+                    );
+                    // zoom in end
+                }
