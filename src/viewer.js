@@ -150,101 +150,27 @@ function addOnClickEvents(){
 
     moveButton.onclick = function(){
         console.log("move button is clicked");
+    }
+    var zoomOutButton = document.getElementById("zoomout");
+    moveButton.onclick = function(){
+        console.log("move button is clicked");
+    }
+    var zoominButton = document.getElementById("zoomin");
+    moveButton.onclick = function(){
+        console.log("move button is clicked");
+    }
+    var vrmode = document.getElementById("vrmode");
+    moveButton.onclick = function(){
+        console.log("move button is clicked");
 
-        var zoomOutButton = document.getElementById("zoomout");
-        moveButton.onclick = function(){
-            console.log("move button is clicked");
+    }
+}
+addOnClickEvents();
+init();
+controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.25;
+controls.enableZoom = true;
 
-            var zoominButton = document.getElementById("zoomin");
-            moveButton.onclick = function(){
-                console.log("move button is clicked");
+animate();
 
-                var vrmode = document.getElementById("vrmode");
-                moveButton.onclick = function(){
-                    console.log("move button is clicked");
-
-                }
-
-                addOnClickEvents();
-                init();
-                controls = new THREE.OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true;
-                controls.dampingFactor = 0.25;
-                controls.enableZoom = true;
-
-                animate();
-
-                function loadFunctionKeys(){
-                    var textureLoader = new THREE.TextureLoader();
-                    textureLoader.crossOrigin = "";
-                    textureLoader.setPath("http://localhost:8000/public/images/");
-                    var zoomOutTexture = new THREE.Texture();
-                    var zoomInTexture = new THREE.Texture();
-
-                    zoomOutTexture = textureLoader.load(
-                        "zoomout_u322.png"
-                    );
-
-                    // zoomOutTexture.image = image;
-
-                    // zoom out
-                    var zoomOutGeometry = new THREE.Geometry();
-                    zoomOutGeometry.vertices.push(
-                        new THREE.Vector3(0.0, 0.0, 0.0),
-                        new THREE.Vector3(1.0, 0.0, 0.0),
-                        new THREE.Vector3(1.0, 1.0, 0.0),
-                        new THREE.Vector3(0.0, 1.0, 0.0)
-                    );
-
-                    zoomOutGeometry.faces.push(new THREE.Face3(0, 1, 3));
-                    zoomOutGeometry.faces.push(new THREE.Face3(1, 2, 3));
-
-                    zoomOutGeometry.faceVertexUvs[0] = [];
-
-                    var icon = [
-                        new THREE.Vector2(0, 0),
-                        new THREE.Vector2(1, 0),
-                        new THREE.Vector2(1, 1),
-                        new THREE.Vector2(0, 1)
-                    ];
-                    zoomOutGeometry.faceVertexUvs[0][0] = [
-                        icon[0],
-                        icon[1],
-                        icon[3]
-                    ];
-                    zoomOutGeometry.faceVertexUvs[0][1] = [
-                        icon[1],
-                        icon[2],
-                        icon[3]
-                    ];
-
-                    zoomOutGeometry.computeFaceNormals();
-                    // zoomOutGeometry.computeCentroids();
-                    zoomOutGeometry.computeVertexNormals();
-
-                    var zoomOutMaterial = new THREE.MeshBasicMaterial(
-                        {
-                            color: 0xffffff,
-                            opacity: 0.0,
-                            map: zoomOutTexture
-                        });
-
-                    // set material show double side
-                    zoomOutMaterial.side = THREE.DoubleSide;
-                    var zoomOutMesh = new THREE.Mesh(zoomOutGeometry, zoomOutMaterial);
-                    //TODO keep position fixed related to camera position.
-                    zoomOutMesh.position.set(1.5, 0.0, 0.0);
-                    zoomOutMesh.transparent = true;
-
-                    scene.add(zoomOutMesh);
-                    // zoom out end
-                    // zoom in
-                    var zoomInGeometry = new THREE.Geometry();
-                    zoomInGeometry.vertices.push(
-                        new THREE.Vector3(-1.0, 1.0, 0.0),
-                        new THREE.Vector3(1.0, 1.0, 0.0),
-                        new THREE.Vector3(1.0, -1.0, 0.0),
-                        new THREE.Vector3(-1.0, -1.0, 0.0)
-                    );
-                    // zoom in end
-                }
