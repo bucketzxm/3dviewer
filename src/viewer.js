@@ -4,6 +4,7 @@ MTLLoader = require('./MTLLoader.js');
 OBJLoader = require('./OBJLoader.js');
 OrbitControls = require('./OrbitControls.js');
 helper = require('./helper.js');
+Stats = require('stats.js');
 
 detectWebGL();
 
@@ -60,7 +61,7 @@ function init() {
     // container = document.createElement('div');
     // document.body.appendChild(container);
     container = document.getElementById("container");
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
+    camera = new THREE.PerspectiveCamera(89, window.innerWidth / window.innerHeight, 1, 100000);
     camera.position.z = 3;
     scene = new THREE.Scene();
 
@@ -70,7 +71,7 @@ function init() {
     var manager = new THREE.LoadingManager();
     manager.onStart = function(url, itemsLoaded, itemsTotal){
         console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-    }
+    };
     manager.onLoad = function ( ) {
 	console.log( 'Loading complete!');
         console.log("Model loaded " + modelObject);
@@ -120,11 +121,18 @@ function init() {
     container.appendChild(renderer.domElement);
 }
 
+
+var stats = new Stats();
+stats.showPanel(1);
+document.body.appendChild(stats.dom);
 function animate(){
     setTimeout(function() {
+        stats.begin();
+        render();
+        
+        stats.end();
         requestAnimationFrame(animate);
     }, 1000/300);
-    render();
 }
 
 function render(){
@@ -167,6 +175,8 @@ function addOnClickEvents(){
 }
 addOnClickEvents();
 init();
+
+
 controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
