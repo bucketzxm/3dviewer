@@ -137,33 +137,33 @@ function addOnClickEvents(){
     var recoverButton = document.getElementById("recover");
     recover.onclick = function(){
         console.log("recovery button is clicked");
-        console.log("Set Camera lookAt " + modelObject.position.x + modelObject.position.y + modelObject.position.z);
+        console.log("Set Camera lookAt " + modelObject.position.x + ' ' + modelObject.position.y + ' ' + modelObject.position.z);
         camera.lookAt(modelObject.position);
-    }
+    };
 
     var moveButton = document.getElementById("move");
 
     moveButton.onclick = function(){
         console.log("move button is clicked");
-    }
+    };
     var rotateButton = document.getElementById("rotate");
 
     moveButton.onclick = function(){
         console.log("move button is clicked");
-    }
+    };
     var zoomOutButton = document.getElementById("zoomout");
     moveButton.onclick = function(){
         console.log("move button is clicked");
-    }
+    };
     var zoominButton = document.getElementById("zoomin");
     moveButton.onclick = function(){
         console.log("move button is clicked");
-    }
+    };
     var vrmode = document.getElementById("vrmode");
     moveButton.onclick = function(){
         console.log("move button is clicked");
 
-    }
+    };
 }
 addOnClickEvents();
 init();
