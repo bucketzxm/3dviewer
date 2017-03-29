@@ -61,27 +61,24 @@ function init() {
     // container = document.createElement('div');
     // document.body.appendChild(container);
     container = document.getElementById("container");
-    camera = new THREE.PerspectiveCamera(89, window.innerWidth / window.innerHeight, 1, 100000);
+    camera = new THREE.PerspectiveCamera(89, window.innerWidth / window.innerHeight, 1, 5000);
     camera.position.z = 3;
     scene = new THREE.Scene();
 
     initSceneLights();
-
 
     var manager = new THREE.LoadingManager();
     manager.onStart = function(url, itemsLoaded, itemsTotal){
         console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
     };
     manager.onLoad = function ( ) {
-	console.log( 'Loading complete!');
-        console.log("Model loaded " + modelObject);
-        camera.lookAt(modelObject.position);
+        console.log( 'Loading complete!');
     };
     manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
-	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+        console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
     };
     manager.onError = function ( url ) {
-	console.log( 'There was an error loading ' + url );
+        console.log( 'There was an error loading ' + url );
     };
 
     var mtlLoader = new THREE.MTLLoader(manager);
@@ -93,6 +90,17 @@ function init() {
 
     console.log("mtlFilePath=" + mtlFilePath + " objFilePath="+ objFilePath);
 
+
+    var onProgress = function(xhr){
+        if (xhr.lengthComputable){
+            var percentComplete = xhr.loaded / xhr.total * 100;
+            console.log(Math.round(percentComplete, 2) + '% downloaded');
+        }
+    };
+    var onError =function( xhr ){
+        console.log("loading object error "xhr);
+    };
+    
     mtlLoader.load(mtlFilePath, function(materials){
         materials.preload();
         // console.log(materials.materials.default.map);
@@ -108,10 +116,19 @@ function init() {
                 if( child instanceof THREE.Mesh){
                     child.material.side = THREE.DoubleSide;
                 }
+
             });
             scene.add(object);
             modelObject = object;
-        });
+
+            /* modelObject.traverse(function(child){
+             *     if(child.geometry != undefined){
+             *         positions = getCentroid(child);
+             *         camera.lookAt(new THREE.Vector3(positions.x, positions.y, positions.z));
+             *         console.log("model mesh center position" + positions.x + positions.y + positions.z);
+             *     }
+             * });*/
+        }, onProgress, onError);
     });
     renderer = new THREE.WebGLRenderer({canvas: viewport});
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -119,25 +136,42 @@ function init() {
     renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
 
     container.appendChild(renderer.domElement);
+
+    window.addEventListener('resize', onWindowResize, false);
 }
 
 
 var stats = new Stats();
 stats.showPanel(1);
 document.body.appendChild(stats.dom);
+
+
+
+function onWindowResize() {
+    windowHalfX = window.innerWidth / 2;
+    windwoHalfY = window.innerHeight / 2;
+
+    camera.aspect = windwo.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+
+
+
 function animate(){
     setTimeout(function() {
+        requestAnimationFrame(animate);
         stats.begin();
         render();
-        
         stats.end();
-        requestAnimationFrame(animate);
     }, 1000/300);
 }
 
 function render(){
     requestAnimationFrame(render);
-    controls.update();
+    /* controls.update();*/
+    camera.lookAt(scene.position);
     renderer.render(scene, camera);
 }
 
@@ -183,4 +217,31 @@ controls.dampingFactor = 0.25;
 controls.enableZoom = true;
 
 animate();
+
+function getCentroid(mesh){
+    mesh.geometry.computeBoundingBox();
+    boundingBox = mesh.geometry.boundingBox;
+
+    var x0 = boundingBox.min.x;
+    var x1 = boundingBox.max.x;
+    var y0 = boundingBox.min.y;
+    var y1 = boundingBox.max.y;
+    var z0 = boundingBox.min.z;
+    var z1 = boundingBox.max.z;
+
+    var bWidth = (x0>x1)?x0-x1:x1-x0;
+    var bHeight = (y0>y1)?y0-y1:y1-y0;
+    var bDepth = (z0 > z1)?z0-z1:z1-z0;
+
+
+    var centroidX = x0 + (bWidth /2)+mesh.position.x;
+    var centroidY = y0 + (bHeight/2)+mesh.position.y;
+    var centroidZ = z0 + (bDepth/2) + mesh.position.z;
+    return mesh.geometry.centroid = {
+        x: centroidX,
+        y: centroidY,
+        z: centroidZ
+    };
+}
+
 
