@@ -2,6 +2,7 @@ THREE = require('three');
 Detector = require('./Detector.js');
 MTLLoader = require('./MTLLoader.js');
 OBJLoader = require('./OBJLoader.js');
+TGALoader = require('./TGALoader.js');
 OrbitControls = require('./OrbitControls.js');
 helper = require('./helper.js');
 Stats = require('stats.js');
@@ -98,9 +99,10 @@ function init() {
         }
     };
     var onError =function( xhr ){
-        console.log("loading object error "xhr);
+        console.log("loading object error " + xhr);
     };
-    
+
+    THREE.Loader.Handlers.add( /\.tga$/i, new THREE.TGALoader() );
     mtlLoader.load(mtlFilePath, function(materials){
         materials.preload();
         // console.log(materials.materials.default.map);
@@ -123,7 +125,7 @@ function init() {
 
             /* modelObject.traverse(function(child){
              *     if(child.geometry != undefined){
-             *         positions = getCentroid(child);
+             *         positions = helper.getCentroid(child);
              *         camera.lookAt(new THREE.Vector3(positions.x, positions.y, positions.z));
              *         console.log("model mesh center position" + positions.x + positions.y + positions.z);
              *     }
@@ -217,31 +219,3 @@ controls.dampingFactor = 0.25;
 controls.enableZoom = true;
 
 animate();
-
-function getCentroid(mesh){
-    mesh.geometry.computeBoundingBox();
-    boundingBox = mesh.geometry.boundingBox;
-
-    var x0 = boundingBox.min.x;
-    var x1 = boundingBox.max.x;
-    var y0 = boundingBox.min.y;
-    var y1 = boundingBox.max.y;
-    var z0 = boundingBox.min.z;
-    var z1 = boundingBox.max.z;
-
-    var bWidth = (x0>x1)?x0-x1:x1-x0;
-    var bHeight = (y0>y1)?y0-y1:y1-y0;
-    var bDepth = (z0 > z1)?z0-z1:z1-z0;
-
-
-    var centroidX = x0 + (bWidth /2)+mesh.position.x;
-    var centroidY = y0 + (bHeight/2)+mesh.position.y;
-    var centroidZ = z0 + (bDepth/2) + mesh.position.z;
-    return mesh.geometry.centroid = {
-        x: centroidX,
-        y: centroidY,
-        z: centroidZ
-    };
-}
-
-
