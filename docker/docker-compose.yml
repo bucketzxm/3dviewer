@@ -1,0 +1,13 @@
+version: '1'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    -volumes:
+      - .:/code
+  mysql:
+    image: "mysql:5.6.35"
+
+  redis:
+    image: "redis:3.2"
