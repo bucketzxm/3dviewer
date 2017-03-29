@@ -1,19 +1,19 @@
 function getQueryStr(argname)
 {
-  var url = document.location.href;
-  var arrStr = url.substring(url.indexOf("?") + 1).split("&");
-  //return arrStr;
-  for (var i = 0; i < arrStr.length; i++)
-  {
-    var loc = arrStr[i].indexOf(argname+"=");
-    if(loc!=-1){
-      var ans =  arrStr[i].replace(argname + "=", "").replace("?", "");
-      return ans;
-      break;
-    }
-  }
-  console.log('getQueryStr failed return empty "');
-  return "";
+    var url = document.location.href;
+    var arrStr = url.substring(url.indexOf("?") + 1).split("&");
+    //return arrStr;
+    for (var i = 0; i < arrStr.length; i++)
+        {
+            var loc = arrStr[i].indexOf(argname+"=");
+            if(loc!=-1){
+                var ans =  arrStr[i].replace(argname + "=", "").replace("?", "");
+                return ans;
+                break;
+            }
+        }
+    console.log('getQueryStr failed return empty "');
+    return "";
 }
 
 
@@ -44,6 +44,45 @@ function getCentroid(mesh){
 }
 
 
+function drawCoordinatePlane(scene){
+    // x
+    var materialX = new THREE.LineBasicMaterial({color: 0x0000ff});
+    var geometryX = new THREE.Geometry();
+    geometryX.vertices.push(new THREE.Vector3(0, 0, 0));
+    geometryX.vertices.push(new THREE.Vector3(10, 0, 0));
+    geometryX.vertices.push(new THREE.Vector3(100, 0, 0));
 
-export {getCentroid,
-        getQueryStr}
+    var lineX = new THREE.Line(geometryX, materialX);
+    scene.add(lineX);
+
+
+    // y
+
+    var materialY = new THREE.LineBasicMaterial({color: 0x00ff00});
+    var geometryY = new THREE.Geometry();
+    geometryY.vertices.push(new THREE.Vector3(0, 0, 0));
+    geometryY.vertices.push(new THREE.Vector3(0, 10, 0));
+    geometryY.vertices.push(new THREE.Vector3(0, 100, 0));
+
+    var lineY = new THREE.Line(geometryY, materialY);
+
+    scene.add(lineY);
+    // z
+    var materialZ = new THREE.LineBasicMaterial({color: 0xff0000});
+    var geometryZ = new THREE.Geometry();
+    geometryZ.vertices.push(new THREE.Vector3(0, 0, 0));
+    geometryZ.vertices.push(new THREE.Vector3(0, 0, 10));
+    geometryZ.vertices.push(new THREE.Vector3(0, 0, 100));
+
+    var lineZ = new THREE.Line(geometryZ, materialZ);
+    scene.add(lineZ);
+
+}
+
+
+
+export {
+    getCentroid,
+    getQueryStr,
+    drawCoordinatePlane
+}

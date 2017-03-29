@@ -113,16 +113,13 @@ function init() {
         objLoader.setPath("http://localhost:8000/assets/");
         objLoader.load(objFilePath, function(object){
             // set all children to doubleside
-
             object.traverse(function(child){
                 if( child instanceof THREE.Mesh){
                     child.material.side = THREE.DoubleSide;
                 }
-
             });
             scene.add(object);
             modelObject = object;
-
             /* modelObject.traverse(function(child){
              *     if(child.geometry != undefined){
              *         positions = helper.getCentroid(child);
@@ -132,6 +129,8 @@ function init() {
              * });*/
         }, onProgress, onError);
     });
+    // draw coordinatePlane for debug
+    helper.drawCoordinatePlane(scene);
     renderer = new THREE.WebGLRenderer({canvas: viewport});
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -159,8 +158,6 @@ function onWindowResize() {
 }
 
 
-
-
 function animate(){
     setTimeout(function() {
         requestAnimationFrame(animate);
@@ -172,17 +169,21 @@ function animate(){
 
 function render(){
     requestAnimationFrame(render);
-    /* controls.update();*/
+    controls.update();
     camera.lookAt(scene.position);
     renderer.render(scene, camera);
 }
 
+
+function zoomInCamera(delta){
+}
+
+
 function addOnClickEvents(){
     var recoverButton = document.getElementById("recover");
     recover.onclick = function(){
-        console.log("recovery button is clicked");
-        console.log("Set Camera lookAt " + modelObject.position.x + ' ' + modelObject.position.y + ' ' + modelObject.position.z);
-        camera.lookAt(modelObject.position);
+        console.log("Set Camera lookAt " + scene.position.x + ' ' + scene.position.y + ' ' + scene.position.z);
+        camera.lookAt(scene.position);
     };
 
     var moveButton = document.getElementById("move");
@@ -192,26 +193,28 @@ function addOnClickEvents(){
     };
     var rotateButton = document.getElementById("rotate");
 
-    moveButton.onclick = function(){
-        console.log("move button is clicked");
+    rotateButton.onclick = function(){
+        console.log("rotate button is clicked");
     };
     var zoomOutButton = document.getElementById("zoomout");
-    moveButton.onclick = function(){
-        console.log("move button is clicked");
+    zoomOutButton.onclick = function(){
+        console.log("zoomOut button is clicked");
+        console.log(camera.zoom)
+        debugger;
     };
-    var zoominButton = document.getElementById("zoomin");
-    moveButton.onclick = function(){
-        console.log("move button is clicked");
+    var zoomInButton = document.getElementById("zoomin");
+    zoomInButton.onclick = function(){
+        console.log("zoomIn button is clicked");
     };
-    var vrmode = document.getElementById("vrmode");
-    moveButton.onclick = function(){
-        console.log("move button is clicked");
+    var vrmodeButton = document.getElementById("vrmode");
+    vrmodeButton.onclick = function(){
+        console.log("vrmode button is clicked");
 
     };
 }
+
 addOnClickEvents();
 init();
-
 
 controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -219,3 +222,14 @@ controls.dampingFactor = 0.25;
 controls.enableZoom = true;
 
 animate();
+
+
+function fitCamera(){
+    var dist = '';   // distance from the camera to the closest face of the cube.
+
+    var height = ""; // height of the cube
+
+    // set the camera field-of-view
+}
+
+
