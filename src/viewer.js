@@ -120,6 +120,8 @@ function init() {
             });
             scene.add(object);
             modelObject = object;
+
+            helper.drawBoundingBox(scene, object);
             /* modelObject.traverse(function(child){
              *     if(child.geometry != undefined){
              *         positions = helper.getCentroid(child);

@@ -79,10 +79,14 @@ function drawCoordinatePlane(scene){
 
 }
 
-
+function drawBoundingBox(scene, object){
+    var box = new THREE.BoxHelper(object, 0xffff00);
+    scene.add(box);
+}
 
 export {
     getCentroid,
     getQueryStr,
-    drawCoordinatePlane
+    drawCoordinatePlane,
+    drawBoundingBox
 }
