@@ -6,7 +6,7 @@ TGALoader = require('./TGALoader.js');
 OrbitControls = require('./OrbitControls.js');
 helper = require('./helper.js');
 Stats = require('stats.js');
-
+urljoin = require('url-join');
 detectWebGL();
 
 var container;
@@ -15,6 +15,8 @@ var lighting, ambient, keyLight, fillLight, backLight;
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight /2;
 var modelObject = null;
+var BASE_URL = "http://localhost:8000";
+var ASSETS_URL = "assets/";
 
 function detectWebGL(){
     if (!Detector.webgl){
@@ -58,6 +60,43 @@ function loadShader(vsPath, fgPath, vertexShader, fragmentShader){
     // });
 }
 
+
+function initControl(){
+    // controls settings.
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = true;
+    controls.enablePan = false;
+    controls.enableKeys = false;
+}
+
+
+function setPanMode(){
+    controls.enablePan = true;
+    controls.enableZoom = false;
+    controls.enableRotate = false;
+
+    controls.mouseButtons = {
+        PAN: THREE.MOUSE.LEFT
+    }
+}
+
+function setRotateMode(){
+    controls.enbaleRotate = true;
+    controls.enableZoom = false;
+    controls.enbalePan = false;
+
+    controls.mouseButtons = {
+        ORBIT: THREE.MOUSE.LEFT
+    }
+
+};
+
+function setDollyMode(){
+    // nothing here for now.
+};
+
+
+
 function init() {
     // container = document.createElement('div');
     // document.body.appendChild(container);
@@ -67,7 +106,6 @@ function init() {
     scene = new THREE.Scene();
 
     initSceneLights();
-
     var manager = new THREE.LoadingManager();
     manager.onStart = function(url, itemsLoaded, itemsTotal){
         console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
@@ -83,7 +121,7 @@ function init() {
     };
 
     var mtlLoader = new THREE.MTLLoader(manager);
-    mtlLoader.setPath('http://localhost:8000/assets/');
+    mtlLoader.setPath(urljoin(BASE_URL,ASSETS_URL));
     mtlLoader.crossOrigin = '';
 
     mtlFilePath = helper.getQueryStr("mtlFilePath");
@@ -110,7 +148,7 @@ function init() {
         // materials.materials.default.map.minFilter = THREE.LinearFilter;
         var objLoader = new THREE.OBJLoader(manager);
         objLoader.setMaterials(materials);
-        objLoader.setPath("http://localhost:8000/assets/");
+        objLoader.setPath(urljoin(BASE_URL,ASSETS_URL));
         objLoader.load(objFilePath, function(object){
             // set all children to doubleside
             object.traverse(function(child){
@@ -120,19 +158,31 @@ function init() {
             });
             scene.add(object);
             modelObject = object;
-
+            var centerPosition = new THREE.Vector3(0, 0 , 0);
+            var boundingBox = null;
+            object.traverse(function(child){
+                if(child.geometry != undefined){
+                    centerPosition = helper.getCentroid(child);
+                    // set object center to the same as world center;
+                    object.position.set(-centerPosition.x, -centerPosition.y, -centerPosition.z);
+                    boundingBox = helper.getBoundingBox(child);
+                }
+            });
             helper.drawBoundingBox(scene, object);
-            /* modelObject.traverse(function(child){
-             *     if(child.geometry != undefined){
-             *         positions = helper.getCentroid(child);
-             *         camera.lookAt(new THREE.Vector3(positions.x, positions.y, positions.z));
-             *         console.log("model mesh center position" + positions.x + positions.y + positions.z);
-             *     }
-             * });*/
+
+
+            var dist = Math.abs( boundingBox.min.z - boundingBox.max.z) * 3;
+            var height = Math.abs( boundingBox.min.y - boundingBox.max.y) * 3;
+            var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
+
+            camera.position.set(0, 0, dist);
+            camera.fov.set(fov);
         }, onProgress, onError);
+
     });
     // draw coordinatePlane for debug
     helper.drawCoordinatePlane(scene);
+    helper.drawCameraFrustum(scene, camera);
     renderer = new THREE.WebGLRenderer({canvas: viewport});
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -141,6 +191,9 @@ function init() {
     container.appendChild(renderer.domElement);
 
     window.addEventListener('resize', onWindowResize, false);
+    // initialize control settings.
+    initControl();
+
 }
 
 
@@ -172,13 +225,17 @@ function animate(){
 function render(){
     requestAnimationFrame(render);
     controls.update();
-    camera.lookAt(scene.position);
     renderer.render(scene, camera);
 }
 
 
 function zoomInCamera(delta){
+    camera.position.z += delta;
 }
+
+function zoomOutCamera(delta){
+}
+
 
 
 function addOnClickEvents(){
@@ -192,17 +249,18 @@ function addOnClickEvents(){
 
     moveButton.onclick = function(){
         console.log("move button is clicked");
+        setPanMode();
     };
     var rotateButton = document.getElementById("rotate");
 
     rotateButton.onclick = function(){
         console.log("rotate button is clicked");
+        setRotateMode();
     };
     var zoomOutButton = document.getElementById("zoomout");
     zoomOutButton.onclick = function(){
         console.log("zoomOut button is clicked");
         console.log(camera.zoom)
-        debugger;
     };
     var zoomInButton = document.getElementById("zoomin");
     zoomInButton.onclick = function(){
@@ -218,10 +276,7 @@ function addOnClickEvents(){
 addOnClickEvents();
 init();
 
-controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.25;
-controls.enableZoom = true;
+
 
 animate();
 
@@ -233,5 +288,3 @@ function fitCamera(){
 
     // set the camera field-of-view
 }
-
-

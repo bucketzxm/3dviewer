@@ -18,8 +18,10 @@ function getQueryStr(argname)
 
 
 function getCentroid(mesh){
-    mesh.geometry.computeBoundingBox();
-    boundingBox = mesh.geometry.boundingBox;
+    if (mesh.geometry.boundingBox == null){
+        mesh.geometry.computeBoundingBox();
+    }
+    var boundingBox = mesh.geometry.boundingBox;
 
     var x0 = boundingBox.min.x;
     var x1 = boundingBox.max.x;
@@ -43,6 +45,14 @@ function getCentroid(mesh){
     };
 }
 
+function getBoundingBox(mesh){
+    if (mesh.geometry.boundingBox == null){
+        mesh.geometry.computeBoundingBox();
+    }
+
+    var boundingBox = mesh.geometry.boundingBox;
+    return boundingBox;
+}
 
 function drawCoordinatePlane(scene){
     // x
@@ -84,9 +94,17 @@ function drawBoundingBox(scene, object){
     scene.add(box);
 }
 
+
+function drawCameraFrustum(scene, camera){
+    var helper = new THREE.CameraHelper(camera);
+    scene.add(helper);
+
+}
 export {
     getCentroid,
     getQueryStr,
     drawCoordinatePlane,
-    drawBoundingBox
+    drawBoundingBox,
+    drawCameraFrustum,
+    getBoundingBox
 }

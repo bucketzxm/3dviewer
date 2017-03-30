@@ -20,5 +20,8 @@
     "image-webpack-loader": "^3.2.0",
     "three": "^0.84.0",
     "webpack": "^2.2.1"
+  },
+  "dependencies": {
+    "url-join": "^1.1.0"
   }
 }
