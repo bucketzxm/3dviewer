@@ -11,6 +11,10 @@ detectWebGL();
 
 var container;
 var camera, controls, scene, renderer;
+var cameraInitPosition, cameraInitFov;
+// lookat variable should be a vector3
+var cameraInitLookAt = new THREE.Vector3();
+var modelInitPosition = new THREE.Vector3();
 var lighting, ambient, keyLight, fillLight, backLight;
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight /2;
@@ -81,10 +85,9 @@ function setPanMode(){
 }
 
 function setRotateMode(){
-    controls.enbaleRotate = true;
+    controls.enableRotate = true;
     controls.enableZoom = false;
     controls.enbalePan = false;
-
     controls.mouseButtons = {
         ORBIT: THREE.MOUSE.LEFT
     }
@@ -93,6 +96,7 @@ function setRotateMode(){
 
 function setDollyMode(){
     // nothing here for now.
+
 };
 
 
@@ -129,7 +133,6 @@ function init() {
 
     console.log("mtlFilePath=" + mtlFilePath + " objFilePath="+ objFilePath);
 
-
     var onProgress = function(xhr){
         if (xhr.lengthComputable){
             var percentComplete = xhr.loaded / xhr.total * 100;
@@ -165,6 +168,8 @@ function init() {
                     centerPosition = helper.getCentroid(child);
                     // set object center to the same as world center;
                     object.position.set(-centerPosition.x, -centerPosition.y, -centerPosition.z);
+
+                    modelInitPosition = object.position;
                     boundingBox = helper.getBoundingBox(child);
                 }
             });
@@ -176,7 +181,13 @@ function init() {
             var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
 
             camera.position.set(0, 0, dist);
-            camera.fov.set(fov);
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+            // set initialize info
+            cameraInitPosition = new THREE.Vector3(0, 0, dist);
+            cameraInitFov = fov;
+            cameraInitLookAt = camera.getWorldDirection();
+            // end
         }, onProgress, onError);
 
     });
@@ -230,19 +241,22 @@ function render(){
 
 
 function zoomInCamera(delta){
-    camera.position.z += delta;
 }
 
 function zoomOutCamera(delta){
 }
 
-
-
 function addOnClickEvents(){
     var recoverButton = document.getElementById("recover");
     recover.onclick = function(){
-        console.log("Set Camera lookAt " + scene.position.x + ' ' + scene.position.y + ' ' + scene.position.z);
-        camera.lookAt(scene.position);
+        console.log("recover button clicked.");
+        console.log("CameraInitPosition: " + cameraInitPosition +", "+"CameraInitFov: "+cameraInitFov+", " + "CameraInitLookAt: " + cameraInitLookAt );
+        //reset camera and model
+        controls.reset();
+        camera.position.set(cameraInitPosition.x, cameraInitPosition.y, cameraInitPosition.z);
+        camera.fov = cameraInitFov;
+        camera.updateProjectionMatrix();
+
     };
 
     var moveButton = document.getElementById("move");
@@ -260,11 +274,12 @@ function addOnClickEvents(){
     var zoomOutButton = document.getElementById("zoomout");
     zoomOutButton.onclick = function(){
         console.log("zoomOut button is clicked");
-        console.log(camera.zoom)
+        zoomOutCamera();
     };
     var zoomInButton = document.getElementById("zoomin");
     zoomInButton.onclick = function(){
         console.log("zoomIn button is clicked");
+        zoomInCamera();
     };
     var vrmodeButton = document.getElementById("vrmode");
     vrmodeButton.onclick = function(){
