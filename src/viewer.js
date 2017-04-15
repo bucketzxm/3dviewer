@@ -19,8 +19,15 @@ var lighting, ambient, keyLight, fillLight, backLight;
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight /2;
 var modelObject = null;
+/* var BASE_URL = ".";*/
 var BASE_URL = "http://localhost:8000";
 var ASSETS_URL = "assets/";
+
+var CAMERA_DOLLY_SCALE = 3;
+
+var CAMERA_DOLLY_MAX = 500;
+var CAMERA_DOLLY_MIN = -500;
+
 
 function detectWebGL(){
     if (!Detector.webgl){
@@ -81,7 +88,7 @@ function setPanMode(){
 
     controls.mouseButtons = {
         PAN: THREE.MOUSE.LEFT
-    }
+    };
 }
 
 function setRotateMode(){
@@ -90,7 +97,7 @@ function setRotateMode(){
     controls.enbalePan = false;
     controls.mouseButtons = {
         ORBIT: THREE.MOUSE.LEFT
-    }
+    };
 
 };
 
@@ -194,7 +201,13 @@ function init() {
     // draw coordinatePlane for debug
     helper.drawCoordinatePlane(scene);
     helper.drawCameraFrustum(scene, camera);
-    renderer = new THREE.WebGLRenderer({canvas: viewport});
+    renderer = new THREE.WebGLRenderer(
+        {
+            canvas: viewport,
+            preserveDrawingBuffer :true //required to support .toDataURL()
+        }
+    );
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
@@ -240,10 +253,69 @@ function render(){
 }
 
 
-function zoomInCamera(delta){
+
+var scale = 1;
+var zoomSpeed = 1;
+var dollyStart = new THREE.Vector2();
+var dollyEnd = new THREE.Vector2();
+
+
+
+function checkDollyRangeIsValid(x, y, z){
+    if( x > CAMERA_DOLLY_MAX || y > CAMERA_DOLLY_MAX || z > CAMERA_DOLLY_MAX ){
+        return false;
+    }
+    if( x < CAMERA_DOLLY_MIN || y < CAMERA_DOLLY_MIN || z < CAMERA_DOLLY_MIN){
+        return false;
+    }
+    return true;
 }
 
-function zoomOutCamera(delta){
+
+
+function getDollyDistance(){
+    var direction = camera.getWorldDirection();
+    var xaxis = new THREE.Vector3(1, 0, 0);
+    var yaxis = new THREE.Vector3(0, 1, 0);
+    var zaxis = new THREE.Vector3(0, 0, 1);
+
+    var xcos = Math.cos(direction.angleTo(xaxis));
+    var ycos = Math.cos(direction.angleTo(yaxis));
+    var zcos = Math.cos(direction.angleTo(zaxis));
+
+    var xdelta = CAMERA_DOLLY_SCALE*xcos;
+    var ydelta = CAMERA_DOLLY_SCALE*ycos;
+    var zdelta = CAMERA_DOLLY_SCALE*zcos;
+
+    return {
+        x: xdelta,
+        y: ydelta,
+        z: zdelta
+    }
+}
+
+function setDollyCamera(x, y, z){
+    if(checkDollyRangeIsValid(x, y, z)){
+        camera.position.set(x, y, z);
+    }
+    camera.updateProjectionMatrix();
+}
+
+function handleDollyIn(){
+    var delta = getDollyDistance()
+    var afterX = camera.position.x - delta.x;
+    var afterY = camera.position.y - delta.y;
+    var afterZ = camera.position.z - delta.z;
+    setDollyCamera(afterX, afterY, afterZ);
+}
+
+function handleDollyOut(){
+    var delta = getDollyDistance();
+    var afterX = camera.position.x + delta.x;
+    var afterY = camera.position.y + delta.y;
+    var afterZ = camera.position.z + delta.z;
+
+    setDollyCamera(afterX, afterY, afterZ);
 }
 
 function addOnClickEvents(){
@@ -256,6 +328,8 @@ function addOnClickEvents(){
         camera.position.set(cameraInitPosition.x, cameraInitPosition.y, cameraInitPosition.z);
         camera.fov = cameraInitFov;
         camera.updateProjectionMatrix();
+        var dataUrl = renderer.domElement.toDataURL("image/png");
+        console.log(dataUrl);
 
     };
 
@@ -274,12 +348,14 @@ function addOnClickEvents(){
     var zoomOutButton = document.getElementById("zoomout");
     zoomOutButton.onclick = function(){
         console.log("zoomOut button is clicked");
-        zoomOutCamera();
+        handleDollyOut();
+        console.log(dollyStart);
     };
     var zoomInButton = document.getElementById("zoomin");
     zoomInButton.onclick = function(){
         console.log("zoomIn button is clicked");
-        zoomInCamera();
+        handleDollyIn();
+        console.log(dollyStart);
     };
     var vrmodeButton = document.getElementById("vrmode");
     vrmodeButton.onclick = function(){
@@ -290,9 +366,6 @@ function addOnClickEvents(){
 
 addOnClickEvents();
 init();
-
-
-
 animate();
 
 
