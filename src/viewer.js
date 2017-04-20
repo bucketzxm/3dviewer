@@ -20,8 +20,8 @@ var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight /2;
 var modelObject = null;
 /* var BASE_URL = ".";*/
-var BASE_URL = "http://localhost:8000";
-var ASSETS_URL = "assets/";
+var BASE_URL = "http://10.101.1.151:8081";
+var ASSETS_URL = "models/";
 
 var CAMERA_DOLLY_SCALE = 3;
 
@@ -48,10 +48,10 @@ function initSceneLights(){
     backLight.position.set(100, 0, -100).normalize();
 
     scene.add(ambient);
-    scene.add(keyLight);
-    scene.add(fillLight);
-    scene.add(backLight);
-
+    /* scene.add(keyLight);
+     * scene.add(fillLight);
+     * scene.add(backLight);
+     */
 }
 
 // load shader example
@@ -101,22 +101,7 @@ function setRotateMode(){
 
 };
 
-function setDollyMode(){
-    // nothing here for now.
-
-};
-
-
-
-function init() {
-    // container = document.createElement('div');
-    // document.body.appendChild(container);
-    container = document.getElementById("container");
-    camera = new THREE.PerspectiveCamera(89, window.innerWidth / window.innerHeight, 1, 5000);
-    camera.position.z = 3;
-    scene = new THREE.Scene();
-
-    initSceneLights();
+function loadObj(objFilePath, mtlFilePath){
     var manager = new THREE.LoadingManager();
     manager.onStart = function(url, itemsLoaded, itemsTotal){
         console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
@@ -134,11 +119,6 @@ function init() {
     var mtlLoader = new THREE.MTLLoader(manager);
     mtlLoader.setPath(urljoin(BASE_URL,ASSETS_URL));
     mtlLoader.crossOrigin = '';
-
-    mtlFilePath = helper.getQueryStr("mtlFilePath");
-    objFilePath = helper.getQueryStr("objFilePath");
-
-    console.log("mtlFilePath=" + mtlFilePath + " objFilePath="+ objFilePath);
 
     var onProgress = function(xhr){
         if (xhr.lengthComputable){
@@ -198,6 +178,88 @@ function init() {
         }, onProgress, onError);
 
     });
+
+}
+
+function loadJSON(jsonFilePath){
+
+    var manager = new THREE.LoadingManager();
+
+
+    manager.onLoad = function(){
+        console.log("manager onload");
+    }
+    var loader = new THREE.JSONLoader(manager);
+    loader.crossOrigin = '';
+    THREE.Loader.Handlers.add( /\.tga$/i, new THREE.TGALoader() );
+
+    loader.load(
+        urljoin(BASE_URL,ASSETS_URL,jsonFilePath),
+        function(geometry, materials){
+            var material = new THREE.MultiMaterial(materials);
+            var object = new THREE.Mesh(geometry, material);
+            object.traverse(function(child){
+                if( child instanceof THREE.Mesh){
+                    child.material.side = THREE.DoubleSide;
+                }
+            });
+            scene.add(object);
+            modelObject = object;
+            var centerPosition = new THREE.Vector3(0, 0 , 0);
+            var boundingBox = null;
+            object.traverse(function(child){
+                if(child.geometry != undefined){
+                    centerPosition = helper.getCentroid(child);
+                    // set object center to the same as world center;
+                    object.position.set(-centerPosition.x, -centerPosition.y, -centerPosition.z);
+
+                    modelInitPosition = object.position;
+                    boundingBox = helper.getBoundingBox(child);
+                }
+            });
+            helper.drawBoundingBox(scene, object);
+
+
+            var dist = Math.abs( boundingBox.min.z - boundingBox.max.z) * 3;
+            var height = Math.abs( boundingBox.min.y - boundingBox.max.y) * 3;
+            var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
+
+            camera.position.set(0, 0, dist);
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+            // set initialize info
+            cameraInitPosition = new THREE.Vector3(0, 0, dist);
+            cameraInitFov = fov;
+          cameraInitLookAt = camera.getWorldDirection();
+            // en
+        }
+    );
+}
+
+
+function init() {
+    // container = document.createElement('div');
+    // document.body.appendChild(container);
+    container = document.getElementById("container");
+    camera = new THREE.PerspectiveCamera(89, window.innerWidth / window.innerHeight, 1, 5000);
+    camera.position.z = 3;
+    scene = new THREE.Scene();
+
+    initSceneLights();
+
+    mtlFilePath = helper.getQueryStr("mtlFilePath");
+    objFilePath = helper.getQueryStr("objFilePath");
+    modelId = helper.getQueryStr("modelId");
+    console.log(modelId);
+    if (mtlFilePath && objFilePath){
+        loadObj(objFilePath, mtlFilePath);
+    }
+    else if(modelId){
+        loadJSON(modelId+'.json');
+    }
+    else{
+        throw "Not supported file format";
+    }
     // draw coordinatePlane for debug
     helper.drawCoordinatePlane(scene);
     helper.drawCameraFrustum(scene, camera);
@@ -226,10 +288,9 @@ stats.showPanel(1);
 document.body.appendChild(stats.dom);
 
 
-
 function onWindowResize() {
     windowHalfX = window.innerWidth / 2;
-    windwoHalfY = window.innerHeight / 2;
+    windowHalfY = window.innerHeight / 2;
 
     camera.aspect = windwo.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -258,7 +319,6 @@ var scale = 1;
 var zoomSpeed = 1;
 var dollyStart = new THREE.Vector2();
 var dollyEnd = new THREE.Vector2();
-
 
 
 function checkDollyRangeIsValid(x, y, z){
@@ -349,13 +409,11 @@ function addOnClickEvents(){
     zoomOutButton.onclick = function(){
         console.log("zoomOut button is clicked");
         handleDollyOut();
-        console.log(dollyStart);
     };
     var zoomInButton = document.getElementById("zoomin");
     zoomInButton.onclick = function(){
         console.log("zoomIn button is clicked");
         handleDollyIn();
-        console.log(dollyStart);
     };
     var vrmodeButton = document.getElementById("vrmode");
     vrmodeButton.onclick = function(){
