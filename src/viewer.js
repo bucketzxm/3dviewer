@@ -21,8 +21,9 @@ var windowHalfY = window.innerHeight /2;
 var modelObject = null;
 /* var BASE_URL = ".";*/
 var BASE_URL = "http://10.101.1.151:8081";
+//var BASE_URL = "http://localhost:8888";
 var ASSETS_URL = "models/";
-
+/* var ASSETS_URL = "assets/";*/
 var CAMERA_DOLLY_SCALE = 3;
 
 var CAMERA_DOLLY_MAX = 500;
@@ -180,23 +181,42 @@ function loadObj(objFilePath, mtlFilePath){
     });
 
 }
+//var oldTGALoader =function(url, onLoad, onProgress, onError){ return THREE.TGALoader.load(url, onLoad, onProgress, onError);};
+/* var oldTGALoad = THREE.TGALoader.prototype.load;
+ * THREE.TGALoader.prototype.load = function(url, onLoad, onProgress, onError){
+ *
+ *     var newOnLoad = function(texture){
+ *         console.log('new on load');
+ *     };
+ *     //oldTGALoad.call(scope, url, onLoad, newOnProgress, onError);
+ *     oldTGALoad(url, newOnLoad, onProgress, onError);
+ *
+ * };
+ * */
+
+
+THREE.DefaultLoadingManager.onLoad = function(){
+    console.log("default loading mangaer");
+    var image = renderer.domElement.toDataURL("myimage/png");
+}
 
 function loadJSON(jsonFilePath){
 
     var manager = new THREE.LoadingManager();
-
-
     manager.onLoad = function(){
         console.log("manager onload");
-    }
+    };
     var loader = new THREE.JSONLoader(manager);
+    /* var loader = new THREE.ObjectLoader(manager);*/
     loader.crossOrigin = '';
+
     THREE.Loader.Handlers.add( /\.tga$/i, new THREE.TGALoader() );
 
     loader.load(
         urljoin(BASE_URL,ASSETS_URL,jsonFilePath),
         function(geometry, materials){
-            var material = new THREE.MultiMaterial(materials);
+            /* var material = new THREE.MultiMaterial(materials);*/
+            var material = materials[0];
             var object = new THREE.Mesh(geometry, material);
             object.traverse(function(child){
                 if( child instanceof THREE.Mesh){
@@ -230,11 +250,26 @@ function loadJSON(jsonFilePath){
             // set initialize info
             cameraInitPosition = new THREE.Vector3(0, 0, dist);
             cameraInitFov = fov;
-          cameraInitLookAt = camera.getWorldDirection();
+            cameraInitLookAt = camera.getWorldDirection();
             // en
         }
     );
 }
+
+THREE.ImageLoader.prototype.load = function ( url, image ) {
+    var scope = this;
+    if ( image === undefined ) image = new Image();
+    image.addEventListener( 'load', function () {
+      // DO WHATEVER WITH THE IMAGE HERE
+      console.log('load finish');
+        scope.dispatchEvent( { type: 'load', content: image } );
+    }, false );
+    image.addEventListener( 'error', function () {
+        scope.dispatchEvent( { type: 'error', message: 'Couldn\'t load URL [' + url + ']' } );
+    }, false );
+    if ( scope.crossOrigin ) image.crossOrigin = scope.crossOrigin;
+    image.src = url;
+};
 
 
 function init() {
@@ -388,9 +423,6 @@ function addOnClickEvents(){
         camera.position.set(cameraInitPosition.x, cameraInitPosition.y, cameraInitPosition.z);
         camera.fov = cameraInitFov;
         camera.updateProjectionMatrix();
-        var dataUrl = renderer.domElement.toDataURL("image/png");
-        console.log(dataUrl);
-
     };
 
     var moveButton = document.getElementById("move");
@@ -425,12 +457,3 @@ function addOnClickEvents(){
 addOnClickEvents();
 init();
 animate();
-
-
-function fitCamera(){
-    var dist = '';   // distance from the camera to the closest face of the cube.
-
-    var height = ""; // height of the cube
-
-    // set the camera field-of-view
-}

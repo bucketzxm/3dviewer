@@ -452,7 +452,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
     function handleMouseMoveDolly( event ) {
 
-	//console.log( 'handleMouseMoveDolly' );
+	console.log( 'handleMouseMoveDolly' );
 
 	dollyEnd.set( event.clientX, event.clientY );
 
